@@ -1,21 +1,16 @@
 # ============================================================
-# AssetFlow Monorepo — .gitignore
+# AssetFlow Frontend (Vite + React + TypeScript) — .gitignore
 # ============================================================
 
 # ------ Node ------
 node_modules/
-jspm_packages/
 .npm
-.yarn-integrity
 
 # ------ Build Outputs ------
 dist/
 dist-ssr/
 build/
-out/
-.next/
-.nuxt/
-.output/
+.vite/
 
 # ------ Logs ------
 logs/
@@ -37,24 +32,15 @@ lerna-debug.log*
 .env.production.local
 .env.staging
 .env.*.local
-*.env
-*.imp
 
 # ------ TypeScript ------
 *.tsbuildinfo
 
-# ------ Vite ------
-.vite/
-
 # ------ Testing ------
 coverage/
-.nyc_output/
-
-# ------ Prisma / Database ------
-/assetflow-backend/src/generated/prisma
 
 # ------ IDE / Editor ------
-.vscode/
+.vscode/*
 !.vscode/extensions.json
 .idea/
 *.suo
@@ -67,24 +53,6 @@ coverage/
 .DS_Store
 .DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-
-# ------ Misc ------
-*.pem
-*.key
-*.cert
-
-# Prisma / Database specific
-/assetflow-backend/src/generated/prisma
-
-# AI / Agent workspace folders
-.codex/
-.agents/
-.impeccable/
-
-# Documentation (internal, not for repo)
-docs/
