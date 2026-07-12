@@ -54,8 +54,19 @@ export class AllocationService {
             });
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === "P2002" || String(error.message).includes("one_active_allocation"))) {
-                const active = await prisma.allocationRecord.findFirst({ where: { assetId: input.assetId, allocationStatus: AllocationStatus.ACTIVE }, include: { employee: { select: { id: true, name: true, email: true } }, department: { select: { id: true, name: true } } } });
-                throw new AppError(`Asset is already allocated${active?.employee ? ` to ${active.employee.name}` : active?.department ? ` to ${active.department.name}` : ""}`, HTTP_STATUS.CONFLICT);
+                const active = await prisma.allocationRecord.findFirst({
+                    where: { assetId: input.assetId, allocationStatus: AllocationStatus.ACTIVE },
+                    include: {
+                        employee: { select: { id: true, name: true, email: true, department: { select: { id: true, name: true, code: true } } } },
+                        department: { select: { id: true, name: true, code: true } },
+                    },
+                });
+                const heldBy = active?.employee
+                    ? { type: "EMPLOYEE", id: active.employee.id, name: active.employee.name, email: active.employee.email, department: active.employee.department }
+                    : active?.department
+                      ? { type: "DEPARTMENT", id: active.department.id, name: active.department.name, department: active.department }
+                      : null;
+                throw new AppError(`Asset is already allocated${heldBy ? ` to ${heldBy.name}` : ""}`, HTTP_STATUS.CONFLICT, { conflict: true, heldBy });
             }
             throw error;
         }

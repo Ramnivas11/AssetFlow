@@ -42,3 +42,11 @@ Thumbs.db
 
 # Prisma / Database specific
 /assetflow-backend/src/generated/prisma
+
+# AI / Agent workspace folders
+.codex/
+.agents/
+.impeccable/
+
+# Documentation (internal, not for repo)
+docs/

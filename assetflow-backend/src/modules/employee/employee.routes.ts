@@ -22,13 +22,13 @@ router.use(authenticate);
 
 router.get(
     "/",
-    authorize(Role.ADMIN, Role.ASSET_MANAGER, Role.DEPARTMENT_HEAD),
+    authorize(Role.ADMIN, Role.ASSET_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE),
     validate(employeeListSchema),
     listEmployees
 );
 router.get(
     "/:id",
-    authorize(Role.ADMIN, Role.ASSET_MANAGER, Role.DEPARTMENT_HEAD),
+    authorize(Role.ADMIN, Role.ASSET_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE),
     validate(employeeIdSchema),
     getEmployee
 );
