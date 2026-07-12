@@ -88,3 +88,6 @@ Desktop.ini
 
 # Documentation (internal, not for repo)
 docs/
+
+# Agents
+skills-lock.json
