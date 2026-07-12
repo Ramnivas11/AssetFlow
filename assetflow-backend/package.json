@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "set NODE_ENV=test&& set DATABASE_URL=postgresql://test:test@localhost:5432/test&& set CLIENT_URL=http://localhost:3000&& set JWT_ACCESS_SECRET=test-access-secret-that-is-at-least-thirty-two-characters&& set JWT_REFRESH_SECRET=test-refresh-secret-that-is-at-least-thirty-two-characters&& set JWT_ACCESS_EXPIRES_IN=15m&& set JWT_REFRESH_EXPIRES_IN=7d&& tsx --test src/**/*.test.ts",
     "start": "node dist/server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "seed": "tsx prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -36,6 +39,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
