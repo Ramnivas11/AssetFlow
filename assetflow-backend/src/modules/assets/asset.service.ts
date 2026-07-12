@@ -93,32 +93,38 @@ export class AssetService {
         const existing = await this.get(id, actor);
         assertAssetCanBeMutated(existing.status);
         if (input.status) assertAssetTransition(existing.status, input.status);
-        const item = await prisma.asset.update({
-            where: { id },
-            data: {
-                ...input,
-                purchaseCost: input.purchaseCost === undefined ? undefined : new Prisma.Decimal(input.purchaseCost),
-            },
-            include,
+        return prisma.$transaction(async (tx) => {
+            const item = await tx.asset.update({
+                where: { id },
+                data: {
+                    ...input,
+                    purchaseCost: input.purchaseCost === undefined ? undefined : new Prisma.Decimal(input.purchaseCost),
+                },
+                include,
+            });
+            await tx.activityLog.create({ data: this.logData(actor, "ASSET_UPDATED", item.id, input) });
+            return item;
         });
-        await prisma.activityLog.create({ data: this.logData(actor, "ASSET_UPDATED", item.id, input) });
-        return item;
     }
 
     async deactivate(id: string, actor: any) {
         const existing = await this.get(id, actor);
         assertAssetCanBeMutated(existing.status);
-        const item = await prisma.asset.update({ where: { id }, data: { deletedAt: new Date() }, include });
-        await prisma.activityLog.create({ data: this.logData(actor, "ASSET_DEACTIVATED", item.id, { assetTag: item.assetTag }) });
-        return item;
+        return prisma.$transaction(async (tx) => {
+            const item = await tx.asset.update({ where: { id }, data: { deletedAt: new Date() }, include });
+            await tx.activityLog.create({ data: this.logData(actor, "ASSET_DEACTIVATED", item.id, { assetTag: item.assetTag }) });
+            return item;
+        });
     }
 
     async bulkStatus(input: any, actor: any) {
         const assets = await prisma.asset.findMany({ where: { id: { in: input.assetIds }, deletedAt: null }, select: { id: true, status: true } });
         for (const asset of assets) assertAssetTransition(asset.status, input.status);
-        const result = await prisma.asset.updateMany({ where: { id: { in: assets.map((asset) => asset.id) } }, data: { status: input.status } });
-        await prisma.activityLog.create({ data: this.logData(actor, "ASSET_BULK_STATUS_UPDATED", null, input) });
-        return result;
+        return prisma.$transaction(async (tx) => {
+            const result = await tx.asset.updateMany({ where: { id: { in: assets.map((asset) => asset.id) } }, data: { status: input.status } });
+            await tx.activityLog.create({ data: this.logData(actor, "ASSET_BULK_STATUS_UPDATED", null, input) });
+            return result;
+        });
     }
 
     private async scopedDepartmentId(actor: any) {

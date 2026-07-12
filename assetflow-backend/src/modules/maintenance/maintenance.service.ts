@@ -56,10 +56,12 @@ export class MaintenanceService {
     }
 
     private async reject(id: string, requestedById: string, actor: any) {
-        const updated = await prisma.maintenanceRequest.update({ where: { id }, data: { status: MaintenanceStatus.CANCELLED, approvedById: actor.userId } });
-        await prisma.activityLog.create({ data: this.logData(actor, "MAINTENANCE_REJECTED", id, {}) });
-        await prisma.notification.create({ data: { userId: requestedById, title: "Maintenance rejected", message: "Your maintenance request was rejected", type: "WARNING", metadata: { maintenanceRequestId: id } } });
-        return updated;
+        return prisma.$transaction(async (tx) => {
+            const updated = await tx.maintenanceRequest.update({ where: { id }, data: { status: MaintenanceStatus.CANCELLED, approvedById: actor.userId } });
+            await tx.activityLog.create({ data: this.logData(actor, "MAINTENANCE_REJECTED", id, {}) });
+            await tx.notification.create({ data: { userId: requestedById, title: "Maintenance rejected", message: "Your maintenance request was rejected", type: "WARNING", metadata: { maintenanceRequestId: id } } });
+            return updated;
+        });
     }
 
     private logData(actor: any, action: string, entityId: string, metadata: object) {

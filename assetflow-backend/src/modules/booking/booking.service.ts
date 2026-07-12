@@ -31,10 +31,12 @@ export class BookingService {
 
         await this.assertNoOverlap(input.assetId, input.startTime, input.endTime);
         try {
-            const booking = await prisma.booking.create({ data: { ...input, bookedById: actor.userId, status: BookingStatus.APPROVED }, include: { asset: true } });
-            await prisma.activityLog.create({ data: this.logData(actor, "BOOKING_CREATED", booking.id, input) });
-            await prisma.notification.create({ data: { userId: actor.userId, title: "Booking confirmed", message: `${asset.assetTag} is booked`, type: "INFO", metadata: { bookingId: booking.id } } });
-            return booking;
+            return await prisma.$transaction(async (tx) => {
+                const booking = await tx.booking.create({ data: { ...input, bookedById: actor.userId, status: BookingStatus.APPROVED }, include: { asset: true } });
+                await tx.activityLog.create({ data: this.logData(actor, "BOOKING_CREATED", booking.id, input) });
+                await tx.notification.create({ data: { userId: actor.userId, title: "Booking confirmed", message: `${asset.assetTag} is booked`, type: "INFO", metadata: { bookingId: booking.id } } });
+                return booking;
+            });
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError && String(error.message).includes("Booking_no_overlapping_active_bookings")) {
                 await this.throwOverlap(input.assetId, input.startTime, input.endTime);
@@ -46,19 +48,23 @@ export class BookingService {
     async cancel(id: string, actor: any) {
         const booking = await prisma.booking.findUnique({ where: { id } });
         if (!booking) throw new AppError("Booking not found", HTTP_STATUS.NOT_FOUND);
-        const updated = await prisma.booking.update({ where: { id }, data: { status: BookingStatus.CANCELLED } });
-        await prisma.activityLog.create({ data: this.logData(actor, "BOOKING_CANCELLED", id, {}) });
-        await prisma.notification.create({ data: { userId: booking.bookedById, title: "Booking cancelled", message: "Your booking was cancelled", type: "WARNING", metadata: { bookingId: id } } });
-        return updated;
+        return prisma.$transaction(async (tx) => {
+            const updated = await tx.booking.update({ where: { id }, data: { status: BookingStatus.CANCELLED } });
+            await tx.activityLog.create({ data: this.logData(actor, "BOOKING_CANCELLED", id, {}) });
+            await tx.notification.create({ data: { userId: booking.bookedById, title: "Booking cancelled", message: "Your booking was cancelled", type: "WARNING", metadata: { bookingId: id } } });
+            return updated;
+        });
     }
 
     async reschedule(id: string, input: any, actor: any) {
         const booking = await prisma.booking.findUnique({ where: { id } });
         if (!booking) throw new AppError("Booking not found", HTTP_STATUS.NOT_FOUND);
         await this.assertNoOverlap(booking.assetId, input.startTime, input.endTime, id);
-        const updated = await prisma.booking.update({ where: { id }, data: input });
-        await prisma.activityLog.create({ data: this.logData(actor, "BOOKING_RESCHEDULED", id, input) });
-        return updated;
+        return prisma.$transaction(async (tx) => {
+            const updated = await tx.booking.update({ where: { id }, data: input });
+            await tx.activityLog.create({ data: this.logData(actor, "BOOKING_RESCHEDULED", id, input) });
+            return updated;
+        });
     }
 
     private async assertNoOverlap(assetId: string, startTime: Date, endTime: Date, excludeId?: string) {

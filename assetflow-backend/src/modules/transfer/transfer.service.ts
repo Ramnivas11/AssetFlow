@@ -18,9 +18,11 @@ export class TransferService {
 
     async create(input: any, actor: any) {
         const active = await prisma.allocationRecord.findFirst({ where: { assetId: input.assetId, allocationStatus: AllocationStatus.ACTIVE } });
-        const request = await prisma.transferRequest.create({ data: { ...input, requestedById: actor.userId, currentHolderId: active?.employeeId ?? null }, include: { asset: true } });
-        await prisma.activityLog.create({ data: this.logData(actor, "TRANSFER_REQUESTED", request.id, input) });
-        return request;
+        return prisma.$transaction(async (tx) => {
+            const request = await tx.transferRequest.create({ data: { ...input, requestedById: actor.userId, currentHolderId: active?.employeeId ?? null }, include: { asset: true } });
+            await tx.activityLog.create({ data: this.logData(actor, "TRANSFER_REQUESTED", request.id, input) });
+            return request;
+        });
     }
 
     async decide(id: string, input: any, actor: any) {
@@ -38,18 +40,22 @@ export class TransferService {
         if (request.requestedById === actor.userId) throw new AppError("You cannot approve your own transfer request", HTTP_STATUS.FORBIDDEN);
         
         if (input.decision === "REJECT") {
-            const rejected = await prisma.transferRequest.update({ where: { id }, data: { status: TransferStatus.REJECTED, approvedById: actor.userId } });
-            await prisma.activityLog.create({ data: this.logData(actor, "TRANSFER_REJECTED", id, {}) });
-            await prisma.notification.create({ data: { userId: request.requestedById, title: "Transfer rejected", message: `${request.asset.assetTag} transfer request was rejected`, type: "WARNING", metadata: { transferRequestId: id } } });
-            return rejected;
+            return prisma.$transaction(async (tx) => {
+                const rejected = await tx.transferRequest.update({ where: { id }, data: { status: TransferStatus.REJECTED, approvedById: actor.userId } });
+                await tx.activityLog.create({ data: this.logData(actor, "TRANSFER_REJECTED", id, {}) });
+                await tx.notification.create({ data: { userId: request.requestedById, title: "Transfer rejected", message: `${request.asset.assetTag} transfer request was rejected`, type: "WARNING", metadata: { transferRequestId: id } } });
+                return rejected;
+            });
         }
 
         // If actor is a Department Head and request is PENDING, they approve it but the Asset Manager does the actual allocation
         if (actor.role === Role.DEPARTMENT_HEAD && request.status === TransferStatus.PENDING) {
-            const approved = await prisma.transferRequest.update({ where: { id }, data: { status: TransferStatus.APPROVED, approvedById: actor.userId } });
-            await prisma.activityLog.create({ data: this.logData(actor, "TRANSFER_APPROVED_BY_DH", id, {}) });
-            await prisma.notification.create({ data: { userId: request.requestedById, title: "Transfer approved by DH", message: `${request.asset.assetTag} transfer request was approved by Department Head, pending Asset Manager allocation`, type: "INFO", metadata: { transferRequestId: id } } });
-            return approved;
+            return prisma.$transaction(async (tx) => {
+                const approved = await tx.transferRequest.update({ where: { id }, data: { status: TransferStatus.APPROVED, approvedById: actor.userId } });
+                await tx.activityLog.create({ data: this.logData(actor, "TRANSFER_APPROVED_BY_DH", id, {}) });
+                await tx.notification.create({ data: { userId: request.requestedById, title: "Transfer approved by DH", message: `${request.asset.assetTag} transfer request was approved by Department Head, pending Asset Manager allocation`, type: "INFO", metadata: { transferRequestId: id } } });
+                return approved;
+            });
         }
 
         // If actor is Admin or Asset Manager, approve and perform direct allocation

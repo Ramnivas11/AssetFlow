@@ -39,9 +39,11 @@ export class AuditService {
         const item = await prisma.auditItem.findFirst({ where: { id: itemId, auditCycleId: cycleId }, include: { auditCycle: true } });
         if (!item || item.auditCycle.status !== AuditStatus.IN_PROGRESS) throw new AppError("Open audit item not found", HTTP_STATUS.NOT_FOUND);
         if (item.auditorId !== actor.userId) throw new AppError("Only the assigned auditor can verify this item", HTTP_STATUS.FORBIDDEN);
-        const updated = await prisma.auditItem.update({ where: { id: itemId }, data: { result: input.result, remarks: input.remarks, verifiedAt: new Date() } });
-        await prisma.activityLog.create({ data: this.logData(actor, "AUDIT_ITEM_VERIFIED", itemId, input) });
-        return updated;
+        return prisma.$transaction(async (tx) => {
+            const updated = await tx.auditItem.update({ where: { id: itemId }, data: { result: input.result, remarks: input.remarks, verifiedAt: new Date() } });
+            await tx.activityLog.create({ data: this.logData(actor, "AUDIT_ITEM_VERIFIED", itemId, input) });
+            return updated;
+        });
     }
 
     async close(id: string, actor: any) {
