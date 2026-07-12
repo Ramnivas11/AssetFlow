@@ -6,7 +6,7 @@ const cuid = z.string().cuid();
 export const employeeListSchema = z.object({
     query: z.object({
         page: z.coerce.number().int().positive().optional(),
-        limit: z.coerce.number().int().positive().max(100).optional(),
+        limit: z.coerce.number().int().positive().max(1000).optional(),
         search: z.string().trim().min(1).max(100).optional(),
         departmentId: cuid.optional(),
         role: z.nativeEnum(Role).optional(),

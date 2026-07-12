@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { api, toastApiError, unwrap } from "../lib/api";
 import { useList } from "../lib/queries";
 import { Allocation, Asset, TransferRequest, User } from "../lib/types";
-import { DataTable, Section, StatusChip, WorkflowRail, Button, TextField, SelectField, TextAreaField } from "../ui/components";
+import { DataTable, Section, StatusChip, WorkflowRail, Button, TextField, SelectField, TextAreaField, DatePicker } from "../ui/components";
 import { useState } from "react";
 import { useAuth } from "../state/auth";
 
@@ -175,11 +175,10 @@ export default function AllocationTransfer() {
                 </SelectField>
               )}
 
-              <TextField 
+              <DatePicker 
                 label="Expected Return Date" 
-                type="date" 
                 value={expectedReturnDate} 
-                onChange={(e) => setExpectedReturnDate(e.target.value)} 
+                onChange={setExpectedReturnDate} 
               />
 
               <Button 

@@ -18,9 +18,9 @@ export const allocateAssetSchema = z.object({
     body: z
         .object({
             assetId: cuid,
-            employeeId: cuid.optional(),
-            departmentId: cuid.optional(),
-            expectedReturnDate: z.coerce.date().optional(),
+            employeeId: cuid.nullish(),
+            departmentId: cuid.nullish(),
+            expectedReturnDate: z.coerce.date().nullish(),
         })
         .refine((value) => Boolean(value.employeeId) !== Boolean(value.departmentId), "Allocate to either employee or department"),
 });

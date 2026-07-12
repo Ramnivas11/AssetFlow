@@ -6,7 +6,7 @@ const cuid = z.string().cuid();
 export const assetListSchema = z.object({
     query: z.object({
         page: z.coerce.number().int().positive().optional(),
-        limit: z.coerce.number().int().positive().max(100).optional(),
+        limit: z.coerce.number().int().positive().max(1000).optional(),
         search: z.string().trim().min(1).optional(),
         status: z.enum(AssetStatus).optional(),
         categoryId: cuid.optional(),

@@ -4,7 +4,7 @@ import { api, apiMessage, toastApiError, unwrap } from "../lib/api";
 import { useList } from "../lib/queries";
 import { labelize } from "../lib/status";
 import { Asset, Booking } from "../lib/types";
-import { Button, TextField, SelectField, StatusChip, DataTable, Section, EmptyState } from "../ui/components";
+import { Button, DataTable, EmptyState, Section, StatusChip, TextField, TextAreaField, SelectField, DateTimePicker } from "../ui/components";
 import { useState, useMemo } from "react";
 import { CalendarDays, Clock, AlertCircle } from "lucide-react";
 
@@ -143,8 +143,8 @@ export default function BookingScreen() {
         <div className="card grid" style={{ gap: "12px", alignContent: "start" }}>
           <h2 className="section-title">Book a Slot</h2>
           <TextField label="Booking Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Procurement Sync" />
-          <TextField label="Start Time" type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-          <TextField label="End Time" type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          <DateTimePicker label="Start Time" value={startTime} onChange={setStartTime} />
+          <DateTimePicker label="End Time" value={endTime} onChange={setEndTime} />
           
           <Button 
             variant="primary" 
@@ -236,8 +236,8 @@ export default function BookingScreen() {
             <h3 className="section-title">Reschedule Booking</h3>
             <p className="muted" style={{ fontSize: "13px" }}>{editingBooking.title}</p>
             <div className="grid" style={{ gap: "12px", marginTop: "12px" }}>
-              <TextField label="New Start Time" type="datetime-local" value={reschedStart} onChange={(e) => setReschedStart(e.target.value)} />
-              <TextField label="New End Time" type="datetime-local" value={reschedEnd} onChange={(e) => setReschedEnd(e.target.value)} />
+              <DateTimePicker label="New Start Time" value={reschedStart} onChange={setReschedStart} />
+              <DateTimePicker label="New End Time" value={reschedEnd} onChange={setReschedEnd} />
               <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "8px" }}>
                 <Button onClick={() => setEditingBooking(null)}>Cancel</Button>
                 <Button variant="primary" onClick={() => reschedule.mutate({ id: editingBooking.id, body: { startTime: reschedStart, endTime: reschedEnd } })}>Save Changes</Button>

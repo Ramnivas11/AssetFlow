@@ -7,7 +7,7 @@ const dynamicFields = z.array(z.object({ key: z.string().min(1).max(60), label: 
 export const categoryListSchema = z.object({
     query: z.object({
         page: z.coerce.number().int().positive().optional(),
-        limit: z.coerce.number().int().positive().max(100).optional(),
+        limit: z.coerce.number().int().positive().max(1000).optional(),
         search: z.string().trim().min(1).optional(),
         status: z.enum(CategoryStatus).optional(),
     }),

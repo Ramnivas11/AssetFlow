@@ -22,11 +22,28 @@ import { maintenanceRoutes } from "./modules/maintenance";
 import { notificationRoutes } from "./modules/notification";
 import { reportRoutes } from "./modules/report";
 import { transferRoutes } from "./modules/transfer";
+
 const app = express();
 
 app.use(
     cors({
-        origin: env.CLIENT_URL,
+        origin: (origin, callback) => {
+            // Allow requests with no origin (curl, Postman, server-to-server)
+            if (!origin) return callback(null, true);
+
+            const allowed = [env.CLIENT_URL];
+
+            // In development, also allow the Vite fallback port
+            if (env.NODE_ENV !== "production") {
+                allowed.push("http://localhost:5173", "http://localhost:5174");
+            }
+
+            if (allowed.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error(`CORS: origin '${origin}' not allowed`));
+            }
+        },
         credentials: true,
     })
 );

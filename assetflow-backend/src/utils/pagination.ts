@@ -12,7 +12,7 @@ export interface PaginationMeta {
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
+const MAX_LIMIT = 1000;
 
 export const normalizePagination = (input: PaginationInput = {}) => {
     const page = Math.max(input.page ?? DEFAULT_PAGE, 1);

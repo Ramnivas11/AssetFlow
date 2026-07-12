@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, HardDrive, List, Grid, QrCode } from "lucide-react";
+import { Plus, HardDrive, List, Grid, QrCode, Box } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { api, unwrap, toastApiError } from "../lib/api";
@@ -290,7 +290,7 @@ export default function Assets() {
               ))
             ) : (
               <div style={{ gridColumn: "span 3" }}>
-                <EmptyState title="No assets match this filter" />
+                <EmptyState title="No assets match this filter" icon={Box} />
               </div>
             )}
           </div>
@@ -333,7 +333,7 @@ export default function Assets() {
                   <img src={selected.imageUrl} alt="Asset upload" style={{ width: "100%", borderRadius: "var(--rounded-lg)", border: "1px solid var(--border)" }} />
                 </div>
               ) : (
-                <EmptyState title="No attachments yet">No image or documents uploaded during asset registration.</EmptyState>
+                <EmptyState title="No attachments yet" icon={Box}>No image or documents uploaded during asset registration.</EmptyState>
               )
             ) 
           },
@@ -436,7 +436,7 @@ const AllocationHistoryList = ({ items }: { items?: Array<any> }) => (
       ))}
     </div>
   ) : (
-    <EmptyState title="No history yet">This asset has not been allocated to any employee or department yet.</EmptyState>
+    <EmptyState title="No history yet" icon={Box}>This asset has not been allocated to any employee or department yet.</EmptyState>
   )
 );
 
@@ -465,6 +465,6 @@ const MaintenanceHistoryList = ({ items }: { items?: Array<any> }) => (
       ))}
     </div>
   ) : (
-    <EmptyState title="No history yet">This asset has no maintenance logs recorded.</EmptyState>
+    <EmptyState title="No history yet" icon={Box}>This asset has no maintenance logs recorded.</EmptyState>
   )
 );

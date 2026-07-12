@@ -11,6 +11,7 @@ import { useTheme } from "../state/theme";
 import { Button, Skeleton, TextField } from "./components";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
+import { AnimatePresence, motion } from "framer-motion";
 
 gsap.registerPlugin(useGSAP);
 
@@ -44,6 +45,7 @@ const usePath = () => {
 export const App = () => {
   const { user } = useAuth();
   const [path, navigate] = usePath();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (!user && path !== "/login") navigate("/login");
@@ -62,12 +64,22 @@ export const App = () => {
 
   return (
     <div className="app-shell">
-      <Sidebar path={path} navigate={navigate} role={user.role} />
+      <Sidebar 
+        path={path} 
+        navigate={(p) => { navigate(p); setDrawerOpen(false); }} 
+        role={user.role} 
+        isOpen={drawerOpen} 
+        onClose={() => setDrawerOpen(false)}
+      />
       <main className="main">
-        <Topbar path={path} navigate={navigate} />
+        <Topbar path={path} navigate={navigate} onMenuClick={() => setDrawerOpen(true)} />
         <section className="content">
           <Suspense fallback={<Skeleton lines={5} />}>
-            <RouteView path={path} role={user.role} navigate={navigate} />
+            <AnimatePresence mode="wait">
+              <PageTransition key={path}>
+                <RouteView path={path} role={user.role} navigate={navigate} />
+              </PageTransition>
+            </AnimatePresence>
           </Suspense>
         </section>
       </main>
@@ -75,7 +87,21 @@ export const App = () => {
   );
 };
 
-const Sidebar = ({ path, navigate, role }: { path: string; navigate: (path: string) => void; role: Role }) => {
+const PageTransition = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      style={{ display: "contents" }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const Sidebar = ({ path, navigate, role, isOpen, onClose }: { path: string; navigate: (path: string) => void; role: Role; isOpen: boolean; onClose: () => void }) => {
   const { user } = useAuth();
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -90,46 +116,60 @@ const Sidebar = ({ path, navigate, role }: { path: string; navigate: (path: stri
   }, { scope: navRef });
 
   return (
-    <aside className="sidebar" ref={navRef}>
-      <div className="brand">
-        <span className="mark">AF</span>
-        <span className="page-title">AssetFlow</span>
-      </div>
-      <nav className="nav" aria-label="Primary">
-        {visibleNav(role).map((item) => (
-          <button key={item.path} className={path === item.path ? "active" : ""} onClick={() => navigate(item.path)}>
-            <item.icon size={16} />
-            {item.label}
-          </button>
-        ))}
-      </nav>
-      <div style={{ marginTop: "auto", borderTop: "1px solid var(--border-subtle)", paddingTop: "16px", display: "flex", gap: "10px", alignItems: "center" }}>
-        <div style={{ width: "32px", height: "32px", borderRadius: "var(--rounded-full)", background: "var(--signal-100)", color: "var(--signal-600)", display: "grid", placeItems: "center", fontWeight: 600, fontSize: "14px" }}>
-          {user?.name.charAt(0)}
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md-drawer-backdrop"
+            onClick={onClose}
+          />
+        )}
+      </AnimatePresence>
+      <aside className={`sidebar ${isOpen ? "open" : ""}`} ref={navRef}>
+        <div className="brand">
+          <span className="mark">AF</span>
+          <span className="page-title">AssetFlow</span>
         </div>
-        <div style={{ display: "grid", flex: 1, overflow: "hidden" }}>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-900)", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{user?.name}</span>
-          <span className="mono" style={{ fontSize: "11px", color: "var(--ink-500)", textTransform: "capitalize" }}>{user?.role.replace("_", " ")}</span>
+        <nav className="nav" aria-label="Primary">
+          {visibleNav(role).map((item) => (
+            <button key={item.path} className={path === item.path ? "active" : ""} onClick={() => navigate(item.path)}>
+              <item.icon size={16} />
+              <span className="label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="user-footer">
+          <div className="avatar">
+            {user?.name.charAt(0)}
+          </div>
+          <div className="user-info">
+            <span className="user-name">{user?.name}</span>
+            <span className="user-role mono">{user?.role.replace("_", " ")}</span>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 
-const Topbar = ({ path, navigate }: { path: string; navigate: (path: string) => void }) => {
+const Topbar = ({ path, navigate, onMenuClick }: { path: string; navigate: (path: string) => void; onMenuClick: () => void }) => {
   const { user, logout } = useAuth();
   const { mode, setMode } = useTheme();
   const [palette, setPalette] = useState(false);
   return (
     <header className="topbar">
       <div className="actions">
-        <Button className="mobile-menu">
+        <Button className="mobile-menu" onClick={onMenuClick}>
           <Menu size={18} />
         </Button>
-        <span className="muted" style={{ display: "flex", gap: "6px", alignItems: "center", fontSize: "14px" }}>
-          <span>AssetFlow</span>
-          <span style={{ color: "var(--ink-300)" }}>/</span>
-          <span style={{ color: "var(--ink-700)", fontWeight: 500 }}>{navItems.find((item) => item.path === path)?.label}</span>
+        <span className="muted breadcrumb">
+          <span className="brand-name">AssetFlow</span>
+          <span className="slash">/</span>
+          <span className="current-page">{navItems.find((item) => item.path === path)?.label}</span>
         </span>
       </div>
       <div className="actions">

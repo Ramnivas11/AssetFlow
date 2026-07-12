@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
-import { Button, SelectField, TextAreaField, TextField } from "./components";
+import { Button, SelectField, TextAreaField, TextField, DatePicker } from "./components";
 import { useState, useEffect } from "react";
 import { Category, Department } from "../lib/types";
 
@@ -30,7 +30,7 @@ export const AssetForm = ({
   initialValues?: any;
   onSubmit: (values: any) => void 
 }) => {
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<any>({ 
+  const { register, handleSubmit, watch, setValue, reset, control, formState: { errors } } = useForm<any>({ 
     resolver: zodResolver(assetSchema) as any, 
     defaultValues: { isBookable: true, currentCondition: "GOOD", departmentId: "", description: "" } 
   });
@@ -104,7 +104,18 @@ export const AssetForm = ({
           ))}
         </SelectField>
 
-        <TextField label="Acquisition Date" type="date" registration={register("purchaseDate")} error={errors.purchaseDate} />
+        <Controller
+          control={control}
+          name="purchaseDate"
+          render={({ field }) => (
+            <DatePicker 
+              label="Acquisition Date" 
+              value={field.value} 
+              onChange={field.onChange} 
+              error={errors.purchaseDate} 
+            />
+          )}
+        />
         <TextField label="Acquisition Cost" type="number" step="0.01" registration={register("purchaseCost")} error={errors.purchaseCost} />
         <TextField label="Location" registration={register("location")} error={errors.location} />
         
@@ -123,12 +134,20 @@ export const AssetForm = ({
           {selectedCategory.dynamicFields.map((field) => (
             <div className="field" key={field.key}>
               <label>{field.label}</label>
-              <input
-                className="input"
-                type={field.type === "NUMBER" ? "number" : field.type === "DATE" ? "date" : "text"}
-                value={dynValues[field.key] || ""}
-                onChange={(e) => setDynValues({ ...dynValues, [field.key]: e.target.value })}
-              />
+              {field.type === "DATE" ? (
+                <DatePicker 
+                  label=""
+                  value={dynValues[field.key] || ""}
+                  onChange={(v) => setDynValues({ ...dynValues, [field.key]: v })}
+                />
+              ) : (
+                <input
+                  className="input"
+                  type={field.type === "NUMBER" ? "number" : "text"}
+                  value={dynValues[field.key] || ""}
+                  onChange={(e) => setDynValues({ ...dynValues, [field.key]: e.target.value })}
+                />
+              )}
             </div>
           ))}
         </div>

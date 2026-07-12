@@ -8,7 +8,7 @@ import { categoryIdSchema, categoryListSchema, createCategorySchema, updateCateg
 
 const router = Router();
 router.use(authenticate);
-router.get("/", authorize(Role.ADMIN, Role.ASSET_MANAGER, Role.DEPARTMENT_HEAD), validate(categoryListSchema), listCategories);
+router.get("/", authorize(Role.ADMIN, Role.ASSET_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE), validate(categoryListSchema), listCategories);
 router.get("/:id", authorize(Role.ADMIN, Role.ASSET_MANAGER, Role.DEPARTMENT_HEAD), validate(categoryIdSchema), getCategory);
 router.post("/", authorize(Role.ADMIN, Role.ASSET_MANAGER), validate(createCategorySchema), createCategory);
 router.patch("/:id", authorize(Role.ADMIN, Role.ASSET_MANAGER), validate(updateCategorySchema), updateCategory);
