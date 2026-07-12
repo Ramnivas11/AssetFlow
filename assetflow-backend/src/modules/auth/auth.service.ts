@@ -7,7 +7,7 @@ import { hashPassword, verifyPassword } from "../../lib/password";
 import { AppError } from "../../utils/AppError";
 import { AuthTokensDTO, UserResponseDTO } from "./auth.dto";
 import { toUserResponseDTO } from "./auth.mapper";
-import { AuthRepository } from "./auth.repository";
+import { AuthRepository, hashRefreshToken, verifyRefreshTokenHash } from "./auth.repository";
 import { LoginDTO, SignupDTO } from "./auth.validation";
 
 export class AuthService {
@@ -44,7 +44,7 @@ export class AuthService {
         catch { throw new AppError("Invalid or expired refresh token", HTTP_STATUS.UNAUTHORIZED); }
 
         const stored = await this.authRepository.findRefreshToken(payload.jti);
-        if (!stored || stored.revokedAt || stored.expiresAt <= new Date() || stored.user.deletedAt || stored.user.status !== UserStatus.ACTIVE || !(await verifyPassword(refreshToken, stored.token))) {
+        if (!stored || stored.revokedAt || stored.expiresAt <= new Date() || stored.user.deletedAt || stored.user.status !== UserStatus.ACTIVE || !verifyRefreshTokenHash(refreshToken, stored.token)) {
             throw new AppError("Invalid or expired refresh token", HTTP_STATUS.UNAUTHORIZED);
         }
         await this.authRepository.revokeRefreshToken(stored.id);
@@ -63,7 +63,7 @@ export class AuthService {
         const tokenId = randomUUID();
         const refreshToken = generateRefreshToken(userId, tokenId);
         const expiresAt = new Date(verifyRefreshToken(refreshToken).exp! * 1000);
-        await this.authRepository.createRefreshToken(tokenId, userId, await hashPassword(refreshToken), expiresAt);
+        await this.authRepository.createRefreshToken(tokenId, userId, hashRefreshToken(refreshToken), expiresAt);
         return { accessToken: generateAccessToken(userId, role), refreshToken };
     }
 }

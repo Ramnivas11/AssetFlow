@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -8,14 +9,16 @@ datasource db {
 
 model Department {
   id                 String             @id @default(cuid())
-  name               String             @unique
-  code               String             @unique
+  /// Active-row uniqueness is enforced by prisma/migrations/20260712053616_init/migration.sql.
+  name               String
+  /// Active-row uniqueness is enforced by prisma/migrations/20260712053616_init/migration.sql.
+  code               String
   status             DepartmentStatus   @default(ACTIVE)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   deletedAt          DateTime?
   parentDepartmentId String?
-  headId             String?            @unique
+  headId             String?
   allocations        AllocationRecord[] @relation("DepartmentAllocations")
   assets             Asset[]            @relation("DepartmentAssets")
   auditCycles        AuditCycle[]       @relation("AuditCycleDepartment")
@@ -29,7 +32,8 @@ model Department {
 model User {
   id                             String               @id @default(cuid())
   name                           String
-  email                          String               @unique
+  /// Active-row uniqueness is enforced by prisma/migrations/20260712053616_init/migration.sql.
+  email                          String
   password                       String
   avatar                         String?
   role                           Role
@@ -45,7 +49,7 @@ model User {
   createdAuditCycles             AuditCycle[]         @relation("AuditCycleCreatedBy")
   auditAssignments               AuditItem[]          @relation("AuditAuditor")
   bookings                       Booking[]            @relation("BookedBy")
-  managedDepartments             Department?          @relation("DepartmentHead")
+  managedDepartments             Department[]         @relation("DepartmentHead")
   uploadedDocuments              Document[]           @relation("DocumentUploadedBy")
   maintenanceApproved            MaintenanceRequest[] @relation("MaintenanceApprovedBy")
   maintenanceRequests            MaintenanceRequest[] @relation("MaintenanceRequestedBy")
@@ -73,8 +77,10 @@ model AssetCategory {
 
 model Asset {
   id               String               @id @default(cuid())
-  assetTag         String               @unique
-  serialNumber     String               @unique
+  /// Active-row uniqueness is enforced by prisma/migrations/20260712053616_init/migration.sql.
+  assetTag         String
+  /// Active-row uniqueness is enforced by prisma/migrations/20260712053616_init/migration.sql.
+  serialNumber     String
   name             String
   description      String?
   categoryId       String

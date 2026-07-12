@@ -274,25 +274,34 @@ CREATE TABLE "RefreshToken" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Department_name_key" ON "Department"("name");
+DROP INDEX IF EXISTS "Department_name_key";
+DROP INDEX IF EXISTS "Department_code_key";
+DROP INDEX IF EXISTS "Department_headId_key";
+DROP INDEX IF EXISTS "User_email_key";
+DROP INDEX IF EXISTS "AssetCategory_name_key";
+DROP INDEX IF EXISTS "Asset_assetTag_key";
+DROP INDEX IF EXISTS "Asset_serialNumber_key";
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Department_code_key" ON "Department"("code");
+CREATE UNIQUE INDEX "Department_name_active_key" ON "Department"("name") WHERE "deletedAt" IS NULL;
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Department_headId_key" ON "Department"("headId");
+CREATE UNIQUE INDEX "Department_code_active_key" ON "Department"("code") WHERE "deletedAt" IS NULL;
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX "Department_headId_active_key" ON "Department"("headId") WHERE "deletedAt" IS NULL AND "headId" IS NOT NULL;
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_active_key" ON "User"("email") WHERE "deletedAt" IS NULL;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "AssetCategory_name_key" ON "AssetCategory"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Asset_assetTag_key" ON "Asset"("assetTag");
+CREATE UNIQUE INDEX "Asset_assetTag_active_key" ON "Asset"("assetTag") WHERE "deletedAt" IS NULL;
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Asset_serialNumber_key" ON "Asset"("serialNumber");
+CREATE UNIQUE INDEX "Asset_serialNumber_active_key" ON "Asset"("serialNumber") WHERE "deletedAt" IS NULL;
 
 -- CreateIndex
 CREATE INDEX "Asset_assetTag_idx" ON "Asset"("assetTag");
